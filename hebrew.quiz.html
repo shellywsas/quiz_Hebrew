@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מאסטר בגזרות - גרסת פרו</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+    <!-- FontAwesome for cute icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Varela Round', sans-serif;
+            background: linear-gradient(135deg, #ffe1ea 0%, #e0e7ff 50%, #e8fcf1 100%);
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .bg-pattern {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.15;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='10' y='30' font-family='Arial' font-size='20' fill='%236366f1'%3Eא%3C/text%3E%3Ctext x='60' y='20' font-family='Arial' font-size='16' fill='%23ec4899'%3Eג%3C/text%3E%3Ctext x='30' y='70' font-family='Arial' font-size='24' fill='%2314b8a6'%3Eש%3C/text%3E%3Ctext x='80' y='80' font-family='Arial' font-size='18' fill='%238b5cf6'%3Eנ%3C/text%3E%3Ctext x='85' y='45' font-family='Arial' font-size='14' fill='%23f59e0b'%3Eל%3C/text%3E%3C/svg%3E");
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 2px solid white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            z-index: 10;
+            position: relative;
+        }
+
+        .btn-pastel {
+            transition: all 0.3s ease;
+        }
+        .btn-pastel:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 7px 14px rgba(0,0,0,0.1);
+        }
+        .btn-pastel:active {
+            transform: translateY(1px);
+        }
+
+        .correct-anim {
+            animation: popCorrect 0.5s ease;
+            background-color: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #065f46 !important;
+        }
+
+        .wrong-anim {
+            animation: shake 0.5s ease;
+            background-color: #ffe4e6 !important;
+            border-color: #f43f5e !important;
+            color: #881337 !important;
+        }
+
+        @keyframes popCorrect {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hidden-screen { display: none !important; }
+        
+        /* Stats Bars */
+        .stat-bar-bg { background-color: #f3f4f6; border-radius: 9999px; height: 0.75rem; overflow: hidden; width: 100%; margin-top: 0.5rem;}
+        .stat-bar-fill { height: 100%; transition: width 0.5s ease; }
+    </style>
+</head>
+<body class="flex items-center justify-center py-10 px-4 min-h-screen">
+    <div class="bg-pattern"></div>
+
+    <div id="app-container" class="glass-card rounded-3xl w-full max-w-3xl p-6 sm:p-10 flex flex-col items-center text-center">
+        
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="w-full flex flex-col items-center">
+            <div class="text-6xl mb-4">📚✨</div>
+            <h1 class="text-4xl font-bold text-indigo-800 mb-2">מאסטר בגזרות</h1>
+            <p class="text-sm font-bold text-pink-500 mb-6 bg-pink-100 py-1 px-3 rounded-full shadow-sm">שנתון 2009 - הולכים להפציץ בבגרות!</p>
+            <p class="text-lg text-gray-600 mb-8 max-w-md">
+                100 שאלות, ניתוח חכם של ההתקדמות שלך, ומוכנות שיא לבגרות בלשון. מתחילים?
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                <button onclick="startQuiz()" class="btn-pastel bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg">
+                    משחק חדש 🚀
+                </button>
+                <button onclick="showDashboard()" class="btn-pastel bg-white text-indigo-600 border-2 border-indigo-200 hover:border-indigo-400 text-lg font-bold py-4 px-8 rounded-full shadow-md flex items-center justify-center gap-2">
+                    <i class="fas fa-chart-pie"></i> המצב שלי לבגרות
+                </button>
+            </div>
+            
+            <div id="loading-auth" class="mt-6 text-sm text-gray-400">מתחבר למערכת השמירה...</div>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div id="dashboard-screen" class="w-full hidden-screen flex-col items-center">
+            <h2 class="text-3xl font-bold text-indigo-800 mb-2"><i class="fas fa-chart-line text-pink-500"></i> ההתקדמות שלך</h2>
+            <p id="bagrut-status-msg" class="text-xl font-bold mb-6 mt-2 text-gray-700"></p>
+            
+            <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-right">
+                <div class="bg-indigo-50 rounded-2xl p-5 border border-indigo-100 shadow-sm">
+                    <h3 class="font-bold text-indigo-800 mb-3"><i class="fas fa-trophy text-yellow-500"></i> סטטיסטיקה כללית</h3>
+                    <p class="text-lg">שאלות שנענו: <span id="dash-total" class="font-bold">0</span></p>
+                    <p class="text-lg">אחוז הצלחה: <span id="dash-percent" class="font-bold text-indigo-600">0%</span></p>
+                </div>
+                <div class="bg-pink-50 rounded-2xl p-5 border border-pink-100 shadow-sm">
+                    <h3 class="font-bold text-pink-800 mb-3"><i class="fas fa-bullseye text-red-500"></i> נקודות למיקוד</h3>
+                    <p class="text-sm text-gray-700 mb-1">הגזרה החזקה שלך: <span id="dash-best" class="font-bold text-green-600">אין מספיק נתונים</span></p>
+                    <p class="text-sm text-gray-700">הגזרה לחיזוק: <span id="dash-worst" class="font-bold text-red-500">אין מספיק נתונים</span></p>
+                </div>
+            </div>
+
+            <h3 class="font-bold text-xl text-gray-800 mb-4 w-full text-right border-b-2 border-gray-100 pb-2">פירוט לפי גזרות:</h3>
+            <div id="gzarot-stats-container" class="w-full flex flex-col gap-3 mb-8 text-right max-h-60 overflow-y-auto pr-2">
+                <!-- Injected via JS -->
+            </div>
+
+            <button onclick="goToMenu()" class="btn-pastel bg-gray-200 hover:bg-gray-300 text-gray-700 text-lg font-bold py-3 px-8 rounded-full shadow-sm">
+                חזרה לתפריט
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="w-full hidden-screen flex-col items-center">
+            <div class="w-full flex justify-between items-center mb-6">
+                <button onclick="abortQuiz()" class="bg-red-100 text-red-600 hover:bg-red-200 py-1 px-4 rounded-full font-bold transition text-sm flex items-center gap-2">
+                    <i class="fas fa-stop-circle"></i> עצור הכל
+                </button>
+                <div class="hidden sm:flex font-bold text-indigo-800 text-lg items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                    <i class="fas fa-language text-2xl text-pink-500"></i> 
+                    <span>לשון א' ב'</span>
+                </div>
+                <div class="flex gap-2">
+                    <span id="question-counter" class="bg-indigo-100 text-indigo-800 py-1 px-3 rounded-full font-bold text-sm">שאלה 1/6</span>
+                    <span id="score-display" class="bg-pink-100 text-pink-800 py-1 px-3 rounded-full font-bold text-sm">0 נק'</span>
+                </div>
+            </div>
+
+            <div id="progress-bar-container" class="w-full bg-gray-200 rounded-full h-2 mb-6">
+                <div id="progress-bar" class="bg-gradient-to-r from-pink-400 to-purple-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+
+            <h2 id="question-text" class="text-2xl sm:text-3xl font-bold text-gray-800 mb-8 leading-tight mt-2"></h2>
+
+            <div id="answers-container" class="w-full flex flex-col gap-4 mb-6">
+                <!-- Answers injected here -->
+            </div>
+
+            <div id="feedback-area" class="w-full hidden text-right p-5 rounded-2xl mb-6 fade-in text-sm sm:text-base border-2">
+                <p id="feedback-title" class="font-bold text-lg mb-2"></p>
+                <p id="feedback-text"></p>
+            </div>
+
+            <button id="next-btn" onclick="nextQuestion()" class="hidden btn-pastel bg-indigo-500 hover:bg-indigo-600 text-white text-lg font-bold py-3 px-8 rounded-full shadow-md w-full sm:w-auto">
+                המשך הלאה <i class="fas fa-arrow-left mr-2"></i>
+            </button>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="w-full hidden-screen flex-col items-center">
+            <div class="text-7xl mb-4 mt-4" id="result-emoji">🎉</div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2" id="result-title">סיימנו סיבוב!</h2>
+            <p class="text-xl text-gray-600 mb-4">
+                ענית נכון על <span id="final-score" class="font-bold text-indigo-600 text-2xl"></span> מתוך <span id="final-total" class="font-bold">6</span>.
+            </p>
+            
+            <p id="cats-msg" class="text-sm font-bold text-purple-600 bg-purple-100 py-2 px-4 rounded-xl mb-8 border border-purple-200 shadow-sm hidden">
+                <i class="fas fa-cat"></i> פיצפץ ודפני מוסרים מיאו של גאווה!
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button onclick="startQuiz()" class="btn-pastel bg-gradient-to-r from-green-400 to-teal-400 text-white text-xl font-bold py-3 px-8 rounded-full shadow-lg">
+                    עוד סיבוב! 🔄
+                </button>
+                <button onclick="showDashboard()" class="btn-pastel bg-white text-indigo-600 border-2 border-indigo-200 text-lg font-bold py-3 px-8 rounded-full shadow-md">
+                    לדשבורד 📊
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        // ==========================================
+        // FIREBASE & STORAGE SETUP
+        // ==========================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let appId = 'master-gzarot-app';
+
+        // Local State Structure
+        window.userStats = {
+            totalQuestions: 0,
+            totalCorrect: 0,
+            gzarot: {
+                'שלמים': { seen: 0, correct: 0 },
+                'מרובעים': { seen: 0, correct: 0 },
+                'חפ״נ': { seen: 0, correct: 0 },
+                'נפי״ו': { seen: 0, correct: 0 },
+                'ע״ו/ע״י': { seen: 0, correct: 0 },
+                'נל״א': { seen: 0, correct: 0 },
+                'נל״י/ה': { seen: 0, correct: 0 },
+                'חפ״י': { seen: 0, correct: 0 } 
+            }
+        };
+
+        // Init Firebase safely
+        try {
+            const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+            if (firebaseConfigStr) {
+                const firebaseConfig = JSON.parse(firebaseConfigStr);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'master-gzarot';
+
+                // Rule 3: Auth First
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                };
+                
+                initAuth().then(() => {
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            currentUser = user;
+                            document.getElementById('loading-auth').innerText = 'ההיסטוריה שלך מסונכרנת ✓';
+                            await loadStatsFromCloud();
+                        }
+                    });
+                }).catch(e => {
+                    console.log("Auth error, using local session", e);
+                    document.getElementById('loading-auth').style.display = 'none';
+                });
+            } else {
+                document.getElementById('loading-auth').style.display = 'none';
+            }
+        } catch(e) {
+            console.log("Firebase not available, running in-memory mode.", e);
+            document.getElementById('loading-auth').style.display = 'none';
+        }
+
+        async function loadStatsFromCloud() {
+            if (!currentUser || !db) return;
+            try {
+                // Rule 1: Strict paths
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'stats', 'user_stats');
+                const snap = await getDoc(docRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    window.userStats = { ...window.userStats, ...data };
+                }
+            } catch (e) { console.error("Error loading stats", e); }
+        }
+
+        async function saveStatsToCloud() {
+            if (!currentUser || !db) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'stats', 'user_stats');
+                await setDoc(docRef, window.userStats, { merge: true });
+            } catch (e) { console.error("Error saving stats", e); }
+        }
+
+        // ==========================================
+        // 100 QUESTIONS DATABASE
+        // ==========================================
+        
+        // עכשיו גם התשובות השגויות מקבלות את ההסבר המלא של התשובה הנכונה!
+        const mc = (q, gz, correctOption, rationale, ...wrongOptions) => {
+            const opts = wrongOptions.map(t => ({ t, c: false, r: rationale }));
+            opts.push({ t: correctOption, c: true, r: rationale });
+            return { type: 'mc', q, gz, options: opts };
+        };
+        const op = (q, gz, correctAnswersArray, rationale) => {
+            return { type: 'open', q, gz, answers: correctAnswersArray, rationale };
+        };
+
+        const db100 = [
+            // --- שלמים ---
+            op("מהו השורש של 'מַחְשֵׁב'?", "שלמים", ['חשב'], "ח-ש-ב. מ' היא מוספית תבנית."),
+            op("לאיזו גזרה שייך 'הִסְבִּיר'?", "שלמים", ['שלמים'], "ס-ב-ר קיים במלואו."),
+            op("מהו השורש של 'לִשְׁמֹר'?", "שלמים", ['שמר'], "ש-מ-ר. ל' היא תחילית מקור."),
+            op("באיזה בניין 'הִתְלַבֵּשׁ'?", "שלמים", ['התפעל'], "תחילית הת' + דגש בע' הפועל."),
+            mc("הפועל 'יִקְפְּצוּ' הוא משלמים כי:", "שלמים", "כל אותיות השורש (קפצ) מופיעות", "בשלמים כל 3 אותיות השורש נשמרות ומופיעות.", "מסתיים בו'", "יש דגש קל"),
+            mc("איזה פועל הוא שלמים?", "שלמים", "הִתְרַגֵּשׁ", "השורש הוא ר-ג-ש, מגזרת השלמים.", "הוֹשִׁיב", "הִפִּיל", "מָצָא"),
+            op("שורש המילה 'תַּפְקִיד':", "שלמים", ['פקד'], "פ-ק-ד. ת' מוספית."),
+            op("שורש הפועל 'כָּתַבְתִּי':", "שלמים", ['כתב'], "כ-ת-ב. ת' ו-י' הן מוספיות גוף."),
+            mc("יוצא דופן בגזרה:", "שלמים", "הִכִּיר", "זה חפ״נ (נ-כ-ר), השאר הם מגזרת השלמים.", "הִדְלִיק", "הִלְבִּישׁ", "הִשְׁמִיד"),
+            mc("מה השורש של 'מִשְׁפָּט'?", "שלמים", "ש-פ-ט", "ה-מ' היא תחילית של משקל, השורש הוא ש-פ-ט.", "מ-ש-פ", "פ-ש-ט", "ש-פ-פ"),
+            op("שורש המילה 'תִּלְבֹּשֶׁת':", "שלמים", ['לבש'], "ל-ב-ש."),
+            mc("הפועל 'שִׁלֵּם' שייך ל:", "שלמים", "שלמים", "השורש ש-ל-מ שייך לשלמים בבניין פיעל.", "מרובעים", "ע״ו", "נפי״ו"),
+            mc("מה המשותף ל: נָסְגָה, שָׁתְקָה, בָּדְקָה?", "שלמים", "גזרת שלמים", "כולן משמרות 3 אותיות שורש כהלכה.", "נל״ה", "בניין הפעיל"),
+            op("שורש הפועל 'אֶזְכֹּר':", "שלמים", ['זכר'], "א' אית״ן, ז-כ-ר שורש."),
+            
+            // --- מרובעים ---
+            op("מה השורש של 'שִׁעֲמֵם'?", "מרובעים", ['שעממ'], "פועל מרובע 4 אותיות (שעממ)."),
+            op("באיזה גזרה 'הִתְגַּעְגֵּעַ'?", "מרובעים", ['מרובעים'], "שורש ג-ע-ג-ע (כפל פלפל)."),
+            mc("איזה פועל הוא מרובעים?", "מרובעים", "צִלְצֵל", "השורש הוא צ-ל-צ-ל ולכן הוא מרובע.", "מְדַבֵּר", "הִרְגִּישׁ", "הִסְתַּפֵּר"),
+            mc("משותף ל-אִרְגֵּן, עִדְכֵּן, תִּקְשֵׁר:", "מרובעים", "כולם מרובעים", "לכולם 4 אותיות שורש מקוריות.", "הפעיל", "ע״ו"),
+            mc("איזה בניין אינו קיים במרובעים?", "מרובעים", "הפעיל", "במרובעים קיימים רק בניינים דגושים: פיעל, פועל, התפעל.", "פיעל", "פועל", "התפעל"),
+            op("שורש של 'תִּכְנְנוּ':", "מרובעים", ['תכננ'], "ת-כ-נ-נ."),
+            mc("יוצא דופן מבחינת שורש:", "מרובעים", "שִׁלֵּם", "שילם הוא שלמים (ש-ל-מ), השאר מרובעים.", "פִּרְסֵם", "טִלְפֵּן", "שִׁכְנֵעַ"),
+            op("שורש המילה 'תִּרְגּוּם':", "מרובעים", ['תרגמ'], "ת-ר-ג-מ."),
+            mc("פועל שורש מ-ח-ז-ר (מרובעים) בבניין פיעל עבר נסתר:", "מרובעים", "מִחְזֵר", "מִחְזֵר הוא צורת העבר בפיעל.", "מְמַחְזֵר", "הִתְמַחְזֵר", "מֻחְזַר"),
+            op("שורש של 'מְעוֹדֶדֶת' (מלשון עידוד):", "מרובעים", ['עודד'], "ע-ו-ד-ד"),
+            mc("מרובעים מגזרת ע״ו שכופלים ל' פועל:", "מרובעים", "פּוֹרֵר", "שורשים חלולים בבניינים הכבדים כופלים את אות הסיום (פ-ו-ר -> פ-ו-ר-ר).", "צִלְצֵל", "דִּפְדֵּף", "תִּרְגֵּם"),
+
+            // --- חפ״נ ---
+            op("לאיזו גזרה שייך 'הִכִּיר'?", "חפ״נ", ['חפנ', 'חסרי פהפועל נ', 'חפ"נ'], "נ-כ-ר, נון נפלה."),
+            op("שורש המילה 'מַסָּע':", "חפ״נ", ['נסע'], "נ-ס-ע. ה-נ' נפלה ויש דגש ב-ס'."),
+            mc("למה 'הִפִּיל' זה חפ״נ?", "חפ״נ", "שורש מתחיל ב-נ' שנבלעה", "השורש מתחיל ב-נ' (נ-פ-ל) שנפלה והפכה לדגש משלים.", "יש בו י'", "משקל הפעיל", "שורש פ-י-ל"),
+            mc("איזה אינו חפ״נ?", "חפ״נ", "הוֹרִיד", "הוריד זה נפי״ו (י-ר-ד). כל השאר חפ״נ.", "הִגִּישׁ", "הִזִּיק", "הִבִּיט"),
+            mc("השלם סדרה של חפ״נ: הִפִּיל, הִכִּיר, ___", "חפ״נ", "הִצִּיל", "השורש של הִצִיל הוא נ-צ-ל ולכן הוא מתאים.", "הֵבִין", "הוֹצִיא", "הִלְבִּישׁ"),
+            op("השורש של יִפֹּל:", "חפ״נ", ['נפל'], "נ-פ-ל. נ' נופלת בעתיד קל."),
+            op("השורש נ-ת-נ מיוחד. בנוסף לחפ״נ הוא גם:", "חפ״נ", ['חלנ', 'חל"נ', 'חסרי להפועל נ'], "ה-נ' האחרונה נופלת (לדוגמה: נתתי)."),
+            mc("שם פועל של נ-ג-ש בהפעיל:", "חפ״נ", "לְהַגִּישׁ", "ה-נ' חסרה גם בשם הפועל, ולכן התשובה היא להגּיש.", "לְהַנְגִּישׁ", "לָגֶשֶׁת", "לְנַגֵּשׁ"),
+            op("שורש המילה 'מַבָּט':", "חפ״נ", ['נבט'], "נ-ב-ט. דגש ב-ב'."),
+            mc("איך אומרים בעתיד אני לשורש נ-ג-ע בבניין קל?", "חפ״נ", "אֶגַּע", "הנו״ן נופלת ונשאר 'אֶגַּע'.", "אֶנְגַּע", "אִיגַּע", "אוֹגִיעַ"),
+            op("שורש המילה 'הַסָּעָה':", "חפ״נ", ['נסע'], "נ-ס-ע"),
+            mc("מילה ממשקל מַקָּל (דגש באות שנייה):", "חפ״נ", "מַצָּב", "מַצָּב מגיע מי-צ-ב שזו גזרת נפי״ו, אבל הוא מתנהג עם דגש משלים דומה.", "מַכְתֵּשׁ", "מַזְלֵג", "מַפְתֵּחַ"),
+            op("שורש של הפועל 'יִקַּח':", "חפ״נ", ['לקח'], "שורש מיוחד ל-ק-ח שמתנהג כמו חפ״נ (ה-ל' נופלת)."), 
+
+            // --- נפי״ו ---
+            op("גזרת 'הוֹרִיד':", "נפי״ו", ['נפיו', 'נפי"ו'], "שורש י-ר-ד (נחי פ' הפועל י/ו)."),
+            op("שורש 'נוֹלַד':", "נפי״ו", ['ילד'], "י-ל-ד. הקידומת 'נוֹ' מעידה על נפעל נפי״ו."),
+            op("שורש 'תּוֹשָׁב':", "נפי״ו", ['ישב'], "י-ש-ב, משקל תּוֹקָל הטיפוסי לנפי״ו."),
+            mc("הפועל 'מֵיטִיב' שייך ל:", "נפי״ו", "נפי״ו", "השורש הוא י-ט-ב. היו״ד נשמרת כצליל אי.", "שלמים", "ע״ו", "חפ״נ"),
+            mc("יוצא דופן (לא נפי״ו):", "נפי״ו", "הֵבִין", "הבין מגיע מע״ו (ב-י-נ), שאר הפעלים הם נפי״ו.", "הוֹדִיעַ", "הוֹשִׁיב", "הוֹרִישׁ"),
+            op("איך אומרים י-ש-ב עתיד היא (קל)?", "נפי״ו", ['תשב'], "ה-י' נחה וחסרה (תֵּשֵׁב)."),
+            mc("מה משמעות האותיות י/ו בשם נפי״ו?", "נפי״ו", "פ' הפועל היא י' או ו'", "ראשי התיבות: נחי - פ' הפועל - יו״ד/וי״ו.", "נופלות ו/י", "השורש מסתיים ב י/ו", "בניין נפעל"),
+            op("שורש 'מֵינִיקָה':", "נפי״ו", ['ינק'], "י-נ-ק (משקל מקביל למיטיב)."),
+            mc("המילה 'מוֹרֶה' (הוראה) שורש וגזרה:", "נפי״ו", "י-ר-י/ה (נפי״ו ונל״י/ה)", "מתחיל ביו״ד ומסתיים בה'.", "מ-ר-ר", "מ-ו-ר", "ר-א-ה"),
+            mc("איזו מילה שורשה י-ד-ע?", "נפי״ו", "מַדָּע", "היו״ד נבלעת לגמרי כמו שקורה לעתים בנו״ן של חפ״נ.", "מָדוֹעַ", "דֵּעָה", "יְדִידִים"),
+            op("שורש המילה 'הוּבַל' (הופעל):", "נפי״ו", ['יבל'], "י-ב-ל"),
+            mc("המילה 'מוֹלֶדֶת' מגיעה משורש:", "נפי״ו", "י-ל-ד", "משורש י-ל-ד, במשקל מוֹקֶלֶת הייחודי לגזרה.", "מ-ל-ד", "ו-ל-ד", "נ-ל-ד"),
+
+            // --- ע״ו / ע״י (חלולים) ---
+            op("באיזה בניין 'הֵבִין'?", "ע״ו/ע״י", ['הפעיל'], "הֵבִין זה הפעיל של גזרת ע״ו."),
+            op("שורש 'הֵקִים':", "ע״ו/ע״י", ['קום'], "השורש החלול הוא ק-ו-ם."),
+            mc("למה קוראים להם 'חלולים'?", "ע״ו/ע״י", "האות האמצעית היא תנועה ונראית חלולה", "האות האמצעית היא ו' או י' והיא נחה, כך שהמילה 'מתרוקנת' מעיצור אמצעי.", "האות הראשונה נופלת", "אין להם משמעות", "רק שתי אותיות"),
+            mc("איזה פועל הוא ע״ו?", "ע״ו/ע״י", "קָם", "השורש ק-ו-ם. ה-ו' נעלמת בצורת העבר בבניין קל.", "סָגַר", "יָשַׁב", "קָרָא"),
+            mc("משותף ל: שָׁר, דָּן, טָס?", "ע״ו/ע״י", "מגזרת ע״ו/ע״י", "כולם פעלים חלולים בבניין קל עבר.", "שלמים", "נל״א", "מרובעים"),
+            mc("אינה ממשפחת ע״ו:", "ע״ו/ע״י", "מַצָּב", "שורש י-צ-ב (נפי״ו), השאר חלולים.", "תְּשׁוּבָה", "מְסִיבָּה", "מָקוֹם"),
+            mc("הפועל 'כּוֹנֵן' נראה מרובע אבל הוא מע״ו. בניין:", "ע״ו/ע״י", "פיעל (פולל)", "בשורשים חלולים ל' הפועל מוכפלת ליצירת בניינים דגושים.", "הפעיל", "פועל", "התפעל"),
+            op("שורש המילה 'אָכִין' (מחר אכין):", "ע״ו/ע״י", ['כונ', 'כינ'], "כ-ו-נ או כ-י-נ."),
+            mc("המילה 'מְכוֹנִית' מאותו שורש של:", "ע״ו/ע״י", "הֲכָנָה", "שתיהן מהשורש כ-ו-נ.", "מַכּוֹת", "מֶכֶר", "כַּוָּנָה"),
+            op("שורש של 'תְּנוּעָה':", "ע״ו/ע״י", ['נוע'], "נ-ו-ע"),
+            mc("איך אומרים ע״ו בבניין נפעל עבר (שורש ק-ו-מ)?", "ע״ו/ע״י", "נָקוֹם", "נָקוֹם (כמו נָסוֹג). ה-ו' הופכת לחולם מלא.", "נִקַּם", "הוּקַם", "נִקְוּם"),
+            op("שורש של 'צַיָּד':", "ע״ו/ע״י", ['ציד'], "צ-י-ד (נוטה לעיתים כשלמים במשקלים דגושים)."),
+
+            // --- נל״א ---
+            op("גזרת 'מָצָא':", "נל״א", ['נלא', 'נל"א'], "מסתיים בא' נחה."),
+            op("שורש 'הִמְצִיא':", "נל״א", ['מצא'], "מ-צ-א."),
+            op("מילה כמו 'שְׁגִיאָה' היא מגזרת:", "נל״א", ['נלא', 'נל"א'], "השורש ש-ג-א (א' נחה בסוף)."),
+            mc("מאפיין גזרת נל״א:", "נל״א", "האות האחרונה א' ולרוב נחה", "האות נכתבת אך אינה עיצורית.", "מתחילים בא'", "מסתיים בא' תמיד נהגית", "מסתיימים בה'"),
+            mc("איזה פועל הוא נל״א?", "נל״א", "קָרָא", "שורש ק-ר-א.", "בָּנָה", "רָאָה", "חָלָה"),
+            mc("איך מטים 'מָצָא' בגוף אני עבר?", "נל״א", "מָצָאתִי", "ה-א' חייבת להישמר בכתיב בגזרת נל״א.", "מָצָתִי", "מָצְתִי", "מָצֵיתִי"),
+            mc("איזה פועל לא שייך לנל״א?", "נל״א", "חָלָה", "שורש ח-ל-י/ה שייך לנל״י/ה. ה-א' אינה שורשית כאן.", "מִלֵּא", "קִנֵּא", "בָּרָא"),
+            mc("השורש ח-ט-א. שם הפועל בבניין קל:", "נל״א", "לַחְטוֹא", "שם הפועל בנל״א נשמר כמו בשלמים (לשמור -> לחטוא).", "לְחַטּוֹת", "לַחֲטָאת", "לְחַטֵּא"),
+            op("שורש המילה 'קְפוּאִים':", "נל״א", ['קפא'], "ק-פ-א."),
+            mc("יוצא דופן (לא נל״א):", "נל״א", "נִרְאָה", "נראה מגיע מהשורש ר-א-י/ה.", "נִמְצָא", "נִקְרָא", "נִבְרָא"),
+            op("שורש המילה 'תּוֹצָאָה':", "נל״א", ['יצא'], "השורש הוא י-צ-א, שייך לנפי״ו + נל״א ביחד!"),
+
+            // --- נל״י/ה ---
+            op("שורש 'תִּרְצִי' (את תרצי):", "נל״י/ה", ['רצה', 'רצי/ה', 'רצי'], "ר-צ-י/ה."),
+            mc("מה מייחד את נל״י/ה?", "נל״י/ה", "אות שלישית י/ה, מתחלפות או נופלות", "האות האחרונה פגיעה ונוטה להיעלם או להפוך לאותיות אהו״י אחרות.", "מסתיימים תמיד ב-י'", "רק בניינים דגושים", "חסרות אות ראשונה"),
+            mc("הפועל 'עָנָה' שייך ל:", "נל״י/ה", "נל״י/ה", "שורש ע-נ-י/ה.", "נל״א", "חפ״נ", "שלמים"),
+            mc("שם הפועל של 'קָנָה':", "נל״י/ה", "לִקְנוֹת", "הסיומת -ות אופיינית לשמות פועל בנל״י/ה.", "לִקְנֹא", "קְנִיָּה", "לְקַנּוֹת"),
+            mc("איך נאמר 'בָּנָה' צורת הם עבר?", "נל״י/ה", "בָּנוּ", "ל' הפועל (ה' או י') נופלת לפני סיומת תנועה.", "בָּנְיוּ", "בָּנָהוּ", "בָּנִינוּ"),
+            mc("מילים המסתימות ב -יָּה (בְּכִיָּה) שייכות ל:", "נל״י/ה", "נל״י/ה", "שמות פעולה אלו (שחייה, ראייה) טיפוסיים לנל״י/ה.", "שלמים", "נפי״ו", "נל״א"),
+            op("הפועל 'הִשְׁתַּנָּה'. הגזרה היא:", "נל״י/ה", ['נליה', 'נל"יה', 'נל"י/ה'], "ש-נ-י/ה (בבניין התפעל)."),
+            mc("שורש י-פ-י/ה בבניין התפעל (הוא עבר):", "נל״י/ה", "הִתְיַפָּה", "היו״ד הראשונה נשמרת והאחרונה הופכת לה'.", "הִתְיַפֵּיף", "מוּפֶה", "הוֹפָה"),
+            op("שורש המילה 'תַּגְלִית':", "נל״י/ה", ['גלה', 'גלי', 'גליה'], "ג-ל-י/ה."),
+            mc("צורת הציווי לנוכח של השורש ש-ת-י/ה (בניין קל):", "נל״י/ה", "שְׁתֵה!", "מסתיימת בה' עם צירה.", "שְׁתוֹת!", "תִּשְׁתֶה!", "שְׁתִי!"),
+            op("שורש הפועל 'תְּגַלּוּ' (אתם):", "נל״י/ה", ['גלה', 'גלי', 'גליה'], "ג-ל-י/ה, ה-ה' נופלת לפני סיומת הרבים."),
+            
+            // --- מעורב ---
+            mc("שאלת אתגר: 'הוֹצִיא' שייך לשתי גזרות:", "כללי", "נפי״ו ונל״א", "השורש הוא י-צ-א, לכן הוא משלב נפי״ו בראשו ונל״א בסופו.", "חפ״נ ונל״א", "ע״ו ונל״י/ה", "מרובעים"),
+            mc("איזה שורש מגזרת הכפולים?", "כללי", "ס-ב-ב", "בכפולים, שתי האותיות האחרונות זהות.", "ס-ו-ב", "י-ס-ב", "ס-ב-ב-ס"),
+            op("שורש של 'מְסִבָּה':", "כללי", ['סבב'], "שורש ס-ב-ב (או ס-ו-ב, מקובל ס-ב-ב מלשון להסב)."),
+            mc("המילה 'מָסָךְ'. שורש וגזרה:", "כללי", "ס-כ-כ (כפולים)", "מלשון לסוכך / סכוך. כפולים.", "מ-ס-כ", "נ-ס-כ", "ס-ו-כ"),
+            op("הבניין של 'הִתְאַכְזֵב':", "כללי", ['התפעל'], "תחילית הת' מעידה על התפעל."),
+            mc("מהו שורש תנייני?", "כללי", "שורש שנוצר מתוך שם עצם קיים", "לדוגמה ת-ר-מ שנוצר מהמילה 'תרומה' (אשר מקורה בר-ו-מ).", "שורש שיש בו פעמיים ת'", "שורש חסר", "שורש מרובע רגיל"),
+            op("שורש הפועל 'מִסְפֵּר' (הוא פיעל):", "כללי", ['מספר'], "שורש תנייני שנוצר מתוך שם העצם 'מספר' (שמקורה המקורי ס-פ-ר)."),
+            mc("בניין נפעל עבר, שורש כ-נ-ס:", "שלמים", "נִכְנַס", "בדיוק כמו נִשְׁמַר.", "הִכָּנֵס", "מֻכְנָס", "יִכָּנֵס"),
+            mc("פועל בבניין התפעל מגזרת ע״ו (כ-ו-נ):", "כללי", "הִתְכּוֹנֵן", "על דרך התפולל.", "הִתְכַּוֵּן", "מְכוֹנֵן", "מוּכָן"),
+            op("שורש המילה 'הַלְוָאָה':", "כללי", ['לוה', 'לוי', 'לויה'], "ל-ו-י/ה."),
+            mc("שורש ר-א-י/ה בניין הפעיל עבר (הוא):", "נל״י/ה", "הֶרְאָה", "נכון.", "הִרְאָה", "מוֹרֶה", "הוֹרְאָה"),
+            op("שורש המילה 'צְמֵאָה':", "נל״א", ['צמא'], "צ-מ-א."),
+            mc("האות ה' במילה 'בָּנְתָה' היא:", "נל״י/ה", "אות משורש המילה?", "לא! זוהי ת' של הנקבה שהחליפה את ה-ה' השורשית (בנתה = בנה + ת).", "אות שורש", "אין פה ה'", "תחילית")
+        ];
+
+        const additionalQuestions = [
+            op("שורש המילה 'שְׁאֵלָה':", "שלמים", ['שאל'], "ש-א-ל."),
+            op("שורש המילה 'הַבְטָחָה':", "שלמים", ['בטח'], "ב-ט-ח."),
+            op("בניין הפועל 'הֻסְבַּר':", "שלמים", ['הופעל'], "הופעל, ס-ב-ר."),
+            mc("מילה המכילה אל״ף נחה:", "נל״א", "מָצָאנוּ", "הא' נכתבת אך אינה נהגית כעיצור.", "מְאֹד", "אָמַר", "שָׁאַל"),
+            op("שורש של 'הוֹפִיעַ':", "נפי״ו", ['יפע'], "י-פ-ע."),
+            mc("הבניין של 'נוֹתַר' (י-ת-ר):", "נפי״ו", "נפעל", "ה-י' הפכה ל-ו' גרונית בגלל תחילית ה-נ' (נוֹ).", "פועל", "הופעל", "קל"),
+            op("שורש המילה 'רִזּוּם' (מלשון רזה):", "כללי", ['רזה', 'רזי', 'רזיה'], "ר-ז-י/ה."),
+            op("שורש המילה 'הוֹדָאָה' (להודות בטעות):", "נפי״ו", ['ידה', 'ידי', 'ידיה'], "י-ד-י/ה! (שילוב של נפי״ו ונל״י/ה)."),
+            mc("איזה פועל הוא מבניין פועל?", "שלמים", "דֻּבַּר", "הקובוץ והדגש מסגירים שזה בניין פועל הסביל.", "דִּבֵּר", "מְדַבֵּר", "הֻדְבַּר"),
+            op("שורש המילה 'מוֹשָׁבָה':", "נפי״ו", ['ישב'], "י-ש-ב."),
+            op("שורש המילה 'תַּחֲנָה':", "כללי", ['חנה', 'חני', 'חניה'], "ח-נ-י/ה."),
+            op("שורש של 'תִּרְגַּמְתִּי':", "מרובעים", ['תרגמ'], "ת-ר-ג-מ."),
+            mc("יוצא דופן (לא נל״י/ה):", "כללי", "גָּבַהּ", "ג-ב-ה משלמים (ה' מפיק שומעים אותה). השאר נל״י/ה.", "בָּכָה", "רָצָה", "זָכָה"),
+            op("שורש המילה 'הַרְצָאָה':", "נל״א", ['רצא'], "ר-צ-א."),
+            op("שורש של 'מַכִּירִים':", "חפ״נ", ['נכר'], "נ-כ-ר."),
+            mc("משקל המילה 'מַחְשֵׁב':", "שלמים", "מַקְטֵל", "התחילית היא מ' פתוחה, והאות ט' של המשקל מקבלת צירה.", "מִקְטָל", "מַקְטָל", "תַּקְטֵל"),
+            op("שורש של 'הֵעִיף':", "ע״ו/ע״י", ['עופ'], "ע-ו-פ."),
+            op("שורש של 'הֵעִיר':", "ע״ו/ע״י", ['עור'], "ע-ו-ר."),
+            mc("בניין של 'הוּקַם':", "ע״ו/ע״י", "הופעל", "זה הצורה הסבילה של הֵקִים (הפעיל).", "פועל", "הפעיל", "נפעל"),
+            op("שורש המילה 'תִּשְׁבֹּרֶת':", "שלמים", ['שבר'], "ש-ב-ר."),
+            mc("למה קוראים להם חסרים?", "חפ״נ", "כי אות אחת מהשורש נבלעת/נופלת", "בדרך כלל האות נ' שנופלת (חסרה) ומפוצה בדגש.", "כי חסר להם בניין", "כי הם פעלים קצרים", "כי אין להם משמעות"),
+            op("שורש של 'לִפֹּל':", "חפ״נ", ['נפל'], "נ-פ-ל."),
+            op("שורש של 'לָגֶשֶׁת':", "חפ״נ", ['נגש'], "נ-ג-ש."),
+            mc("באיזה פועל ה-נ' שורשית ולא נפלה?", "חפ״נ", "נָשַׁם", "היא פ' הפועל אך אינה נופלת בבניין קל עבר כיוון שאין תחילית שתדחק אותה.", "הִגִּישׁ", "נָגַע", "הִסִּיעַ")
+        ];
+        
+        const allQuestions = [...db100, ...additionalQuestions];
+        
+        // ==========================================
+        // GAME LOGIC & UI CONTROL
+        // ==========================================
+        window.QUESTIONS_PER_QUIZ = 6;
+        let currentQuizQuestions = [];
+        let currentIndex = 0;
+        let currentScore = 0;
+        let isAnswered = false;
+
+        window.shuffleArray = function(arr) {
+            let shuffled = [...arr];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        };
+
+        window.normalizeText = function(text) {
+            let normalized = text.toLowerCase().replace(/["'״׳\-., ]/g, '').trim();
+            // המרת אותיות סופיות לרגילות כדי להקל על ההקלדה
+            normalized = normalized.replace(/ם/g, 'מ')
+                                   .replace(/ן/g, 'נ')
+                                   .replace(/ץ/g, 'צ')
+                                   .replace(/ף/g, 'פ')
+                                   .replace(/ך/g, 'כ');
+            return normalized;
+        };
+
+        window.showDashboard = function() {
+            document.getElementById('welcome-screen').classList.add('hidden-screen');
+            document.getElementById('results-screen').classList.add('hidden-screen');
+            document.getElementById('quiz-screen').classList.add('hidden-screen');
+            
+            document.getElementById('dashboard-screen').classList.remove('hidden-screen');
+            document.getElementById('dashboard-screen').classList.add('flex');
+            
+            renderStats();
+        };
+
+        window.goToMenu = function() {
+            document.getElementById('dashboard-screen').classList.add('hidden-screen');
+            document.getElementById('dashboard-screen').classList.remove('flex');
+            
+            document.getElementById('welcome-screen').classList.remove('hidden-screen');
+        };
+
+        window.startQuiz = function() {
+            document.getElementById('welcome-screen').classList.add('hidden-screen');
+            document.getElementById('results-screen').classList.add('hidden-screen');
+            document.getElementById('dashboard-screen').classList.add('hidden-screen');
+            
+            document.getElementById('quiz-screen').classList.remove('hidden-screen');
+            document.getElementById('quiz-screen').classList.add('flex');
+            document.getElementById('cats-msg').classList.add('hidden');
+
+            const validQ = allQuestions.filter(q => q && q.q);
+            currentQuizQuestions = window.shuffleArray(validQ).slice(0, window.QUESTIONS_PER_QUIZ);
+            
+            currentIndex = 0;
+            currentScore = 0;
+            updateScoreDisplay();
+            renderQuestion();
+        };
+
+        window.abortQuiz = function() {
+            if(confirm("בטוח שרוצה להפסיק באמצע הסיבוב?")) {
+                window.goToMenu();
+            }
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-display').innerText = `${currentScore} נק'`;
+            const progress = (currentIndex / window.QUESTIONS_PER_QUIZ) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('question-counter').innerText = `שאלה ${currentIndex + 1}/${window.QUESTIONS_PER_QUIZ}`;
+        }
+
+        function renderQuestion() {
+            isAnswered = false;
+            const q = currentQuizQuestions[currentIndex];
+            
+            document.getElementById('question-text').innerText = q.q;
+            
+            document.getElementById('feedback-area').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            
+            const answersContainer = document.getElementById('answers-container');
+            answersContainer.innerHTML = '';
+
+            if (q.type === 'mc') {
+                const shuffledOptions = window.shuffleArray(q.options);
+                shuffledOptions.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = "btn-pastel w-full text-right bg-white border-2 border-gray-200 hover:border-indigo-300 rounded-2xl p-4 text-lg font-medium text-gray-700 shadow-sm flex justify-between items-center";
+                    btn.innerHTML = `<span>${opt.t}</span> <i class="fas fa-circle outline-none text-gray-200"></i>`;
+                    // Now opt.r ALWAYS contains the main rationale
+                    btn.onclick = () => handleAnswer(opt.c, opt.r, btn, q.gz);
+                    answersContainer.appendChild(btn);
+                });
+            } else if (q.type === 'open') {
+                const inputWrapper = document.createElement('div');
+                inputWrapper.className = "flex flex-col sm:flex-row gap-3 w-full";
+                
+                const input = document.createElement('input');
+                input.type = "text";
+                input.id = "open-answer-input";
+                input.placeholder = "הקלד תשובה כאן...";
+                input.className = "flex-1 border-2 border-gray-300 rounded-2xl p-4 text-lg focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 text-center sm:text-right";
+                
+                input.addEventListener("keypress", function(event) {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        submitOpenAnswer(q);
+                    }
+                });
+
+                const submitBtn = document.createElement('button');
+                submitBtn.innerText = "בדוק אותי";
+                submitBtn.className = "bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-2xl px-6 py-4 transition-colors shadow-md";
+                submitBtn.onclick = () => submitOpenAnswer(q);
+
+                inputWrapper.appendChild(input);
+                inputWrapper.appendChild(submitBtn);
+                answersContainer.appendChild(inputWrapper);
+                
+                setTimeout(() => input.focus(), 100);
+            }
+
+            updateScoreDisplay();
+        }
+
+        window.submitOpenAnswer = function(q) {
+            if (isAnswered) return;
+            const inputEl = document.getElementById('open-answer-input');
+            const userText = inputEl.value;
+            if(!userText.trim()) return;
+
+            const normalizedUserText = window.normalizeText(userText);
+            const isCorrect = q.answers.some(ans => window.normalizeText(ans) === normalizedUserText);
+            
+            inputEl.disabled = true;
+            const btn = inputEl.nextElementSibling;
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+
+            if (isCorrect) {
+                inputEl.classList.add('correct-anim');
+            } else {
+                inputEl.classList.add('wrong-anim');
+                inputEl.value = `נכון: ${q.answers[0]}`; 
+            }
+
+            handleAnswer(isCorrect, q.rationale, null, q.gz);
+        }
+
+        function handleAnswer(isCorrect, rationale, clickedBtn, gzaraTag) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            window.userStats.totalQuestions++;
+            if (!window.userStats.gzarot[gzaraTag]) {
+                window.userStats.gzarot[gzaraTag] = { seen: 0, correct: 0 };
+            }
+            window.userStats.gzarot[gzaraTag].seen++;
+            
+            if (isCorrect) {
+                currentScore++;
+                window.userStats.totalCorrect++;
+                window.userStats.gzarot[gzaraTag].correct++;
+                updateScoreDisplay();
+                if (clickedBtn) {
+                    clickedBtn.classList.add('correct-anim');
+                    clickedBtn.querySelector('i').className = "fas fa-check-circle text-green-500";
+                }
+            } else {
+                if (clickedBtn) {
+                    clickedBtn.classList.add('wrong-anim');
+                    clickedBtn.querySelector('i').className = "fas fa-times-circle text-red-500";
+                }
+                
+                if (currentQuizQuestions[currentIndex].type === 'mc') {
+                    const buttons = document.getElementById('answers-container').children;
+                    const qOptions = currentQuizQuestions[currentIndex].options;
+                    Array.from(buttons).forEach(b => {
+                        const btnText = b.querySelector('span').innerText;
+                        const opt = qOptions.find(o => o.t === btnText);
+                        if(opt && opt.c) {
+                            b.classList.remove('border-gray-200');
+                            b.classList.add('border-green-400', 'bg-green-50');
+                            b.querySelector('i').className = "fas fa-check-circle text-green-500";
+                        }
+                    });
+                }
+            }
+
+            saveStatsToCloud();
+
+            const feedbackArea = document.getElementById('feedback-area');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackText = document.getElementById('feedback-text');
+
+            feedbackArea.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'border-green-300', 'border-red-300', 'text-green-800', 'text-red-800');
+            
+            if (isCorrect) {
+                feedbackArea.classList.add('bg-green-100', 'border-green-300', 'text-green-800');
+                feedbackTitle.innerHTML = "<i class='fas fa-star text-yellow-500'></i> מעולה! תשובה נכונה";
+            } else {
+                feedbackArea.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
+                // התיקון כאן: הודעה מותאמת לטעות שמבשרת על הסבר מפורט שיוצג
+                feedbackTitle.innerHTML = "<i class='fas fa-exclamation-circle'></i> לא נורא, הנה ההסבר המלא:";
+            }
+            
+            feedbackText.innerText = rationale;
+            
+            if (clickedBtn) {
+                const buttons = document.getElementById('answers-container').children;
+                Array.from(buttons).forEach(b => {
+                    b.onclick = null;
+                    b.classList.remove('hover:border-indigo-300');
+                    b.style.cursor = 'default';
+                });
+            }
+
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        window.nextQuestion = function() {
+            currentIndex++;
+            if (currentIndex < window.QUESTIONS_PER_QUIZ) {
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden-screen');
+            document.getElementById('quiz-screen').classList.remove('flex');
+            
+            document.getElementById('results-screen').classList.remove('hidden-screen');
+            document.getElementById('results-screen').classList.add('flex');
+
+            document.getElementById('final-score').innerText = currentScore;
+            document.getElementById('final-total').innerText = window.QUESTIONS_PER_QUIZ;
+            document.getElementById('progress-bar').style.width = `100%`;
+
+            const title = document.getElementById('result-title');
+            const emoji = document.getElementById('result-emoji');
+            
+            if (currentScore === window.QUESTIONS_PER_QUIZ) {
+                title.innerText = "מושלם! מאסטר אמיתי!";
+                emoji.innerText = "👑";
+            } else if (currentScore >= window.QUESTIONS_PER_QUIZ - 2) {
+                title.innerText = "כל הכבוד! תוצאה מעולה";
+                emoji.innerText = "🌟";
+            } else {
+                title.innerText = "שווה לתרגל שוב!";
+                emoji.innerText = "💪";
+            }
+
+            if (currentScore >= 4 && Math.random() > 0.5) {
+                document.getElementById('cats-msg').classList.remove('hidden');
+            }
+        }
+
+        function renderStats() {
+            const stats = window.userStats;
+            document.getElementById('dash-total').innerText = stats.totalQuestions;
+            
+            let percent = 0;
+            if (stats.totalQuestions > 0) {
+                percent = Math.round((stats.totalCorrect / stats.totalQuestions) * 100);
+            }
+            document.getElementById('dash-percent').innerText = `${percent}%`;
+
+            let bestGzara = { name: '-', ratio: -1 };
+            let worstGzara = { name: '-', ratio: 101 };
+
+            const container = document.getElementById('gzarot-stats-container');
+            container.innerHTML = '';
+
+            for (const [gzName, data] of Object.entries(stats.gzarot)) {
+                if (data.seen > 0) {
+                    const ratio = Math.round((data.correct / data.seen) * 100);
+                    
+                    if (data.seen >= 2) {
+                        if (ratio > bestGzara.ratio) bestGzara = { name: gzName, ratio };
+                        if (ratio < worstGzara.ratio) worstGzara = { name: gzName, ratio };
+                    }
+
+                    const colorClass = ratio > 75 ? 'bg-green-500' : (ratio > 50 ? 'bg-yellow-400' : 'bg-red-500');
+                    
+                    const rowHtml = `
+                        <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-gray-700">${gzName}</span>
+                                <span class="text-sm text-gray-500">${data.correct}/${data.seen} (${ratio}%)</span>
+                            </div>
+                            <div class="stat-bar-bg">
+                                <div class="stat-bar-fill ${colorClass}" style="width: ${ratio}%"></div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += rowHtml;
+                }
+            }
+
+            if (bestGzara.name !== '-') {
+                document.getElementById('dash-best').innerText = `${bestGzara.name} (${bestGzara.ratio}%)`;
+            }
+            if (worstGzara.name !== '-') {
+                document.getElementById('dash-worst').innerText = `${worstGzara.name} (${worstGzara.ratio}%)`;
+            }
+
+            const msgEl = document.getElementById('bagrut-status-msg');
+            if (stats.totalQuestions < 10) {
+                msgEl.innerText = "צריך לתרגל עוד קצת כדי לקבל תמונת מצב מדויקת לבגרות 📝";
+                msgEl.className = "text-lg font-bold mb-6 mt-2 text-indigo-500";
+            } else if (percent >= 85) {
+                msgEl.innerText = "אתה מוכן בטירוף לבגרות! נשאר רק לשמור על הכושר 🔥";
+                msgEl.className = "text-lg font-bold mb-6 mt-2 text-green-600";
+            } else if (percent >= 60) {
+                msgEl.innerText = `מצבך טוב! כדאי לתת קצת בוסט ל${worstGzara.name !== '-' ? worstGzara.name : 'גזרות החלשות'} 📈`;
+                msgEl.className = "text-lg font-bold mb-6 mt-2 text-yellow-600";
+            } else {
+                msgEl.innerText = `יש עוד קצת עבודה, כדאי להתמקד ב${worstGzara.name !== '-' ? worstGzara.name : 'בסיס'} ולתרגל חזק 💪`;
+                msgEl.className = "text-lg font-bold mb-6 mt-2 text-red-500";
+            }
+        }
+    </script>
+</body>
+</html>
